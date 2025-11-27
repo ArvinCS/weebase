@@ -1,10 +1,13 @@
 import os  # <-- BARU
 from dotenv import load_dotenv  # <-- BARU
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from neo4j import GraphDatabase
 from sentence_transformers import SentenceTransformer
 import logging
+
+from rag_service import generate_rag_response
 
 load_dotenv()
 
@@ -31,12 +34,28 @@ NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 driver = None
+embedding_model = None
+
+# Request model for chat endpoint
+class ChatRequest(BaseModel):
+    query: str
+
+# Initialize Neo4j connection
 try:
     driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
     driver.verify_connectivity()
     logging.info("Koneksi Neo4j berhasil!")
 except Exception as e:
     logging.error(f"Gagal terhubung ke Neo4j: {e}")
+
+# Initialize embedding model
+try:
+    from sentence_transformers import SentenceTransformer
+    embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    logging.info("Embedding model berhasil dimuat!")
+except Exception as e:
+    logging.error(f"Gagal memuat embedding model: {e}")
+    logging.warning("Fitur chatbot tidak akan tersedia tanpa embedding model")
 
 @app.get("/")
 def read_root():
@@ -188,3 +207,23 @@ def get_entity_details(entity_type: str, entity_id: int):
             
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@app.post("/chat")
+def chat_with_rag(request: ChatRequest):
+    """
+    Endpoint untuk chatbot menggunakan RAG (Retrieval-Augmented Generation).
+    """
+    
+    if driver is None:
+        return {"status": "error", "message": "Database connection not available"}
+    
+    if embedding_model is None:
+        return {"status": "error", "message": "Embedding model not loaded. Please install sentence-transformers: pip install sentence-transformers"}
+    
+    try:
+        # Generate response using RAG service
+        response = generate_rag_response(request.query, driver, embedding_model)
+        return {"status": "success", "response": response}
+    except Exception as e:
+        logging.error(f"Chat error: {e}")
+        return {"status": "error", "message": f"Failed to generate response: {str(e)}"}

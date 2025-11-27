@@ -32,6 +32,19 @@ const Header = () => {
           </li>
           <li>
             <Link 
+              to="/chatbot" 
+              className={`btn ${
+                isActive('/chatbot') 
+                  ? 'bg-white text-purple-600 font-bold hover:bg-white/90' 
+                  : 'bg-white/10 text-white hover:bg-white/30 border-white/30'
+              } transition-all duration-300`}
+            >
+              <span className="text-lg">🤖</span>
+              Chatbot
+            </Link>
+          </li>
+          <li>
+            <Link 
               to="/console" 
               className={`btn ${
                 isActive('/console') 
