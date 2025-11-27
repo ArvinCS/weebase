@@ -1,12 +1,22 @@
 import os  # <-- BARU
 from dotenv import load_dotenv  # <-- BARU
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from neo4j import GraphDatabase
 import logging
 
 load_dotenv()
 
 app = FastAPI()
+
+# --- KONFIGURASI CORS ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Dalam production, ganti dengan domain spesifik
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- KONFIGURASI KONEKSI NEO4J ---
 NEO4J_URI = os.getenv("NEO4J_URI")
@@ -35,3 +45,76 @@ def read_root():
             return {"status": "ok", "message": "Koneksi FastAPI & Neo4j sukses!", "test_query": number}
     except Exception as e:
         return {"status": "error", "message": f"Query ke Neo4j gagal: {e}"}
+
+@app.get("/search")
+def search_entities(q: str = Query(..., min_length=1)):
+    """
+    Endpoint untuk mencari Anime, Karakter, dan Studio berdasarkan kata kunci.
+    """
+    
+    # Query Cypher yang akan dieksekusi
+    # Kita menggunakan parameter $keyword agar aman dari SQL/Cypher injection
+    cypher_query = """
+    MATCH (e) 
+    WHERE (e:Anime AND toLower(e.title) CONTAINS toLower($keyword))
+        OR (e:Character AND toLower(e.name) CONTAINS toLower($keyword)) 
+        OR (e:Studio AND toLower(e.name) CONTAINS toLower($keyword)) 
+    RETURN 
+        CASE 
+            WHEN e:Anime THEN e.title 
+            ELSE e.name 
+        END AS title,
+        labels(e) AS type, 
+        ID(e) AS id
+    LIMIT 25
+    """
+    
+    # Menghubungkan ke Neo4j dan menjalankan query
+    try:
+        with driver.session() as session:
+            # Menggunakan q sebagai parameter $keyword
+            result = session.run(cypher_query, keyword=q) 
+            
+            # Mengubah hasil menjadi list of dictionaries
+            search_results = [record.data() for record in result]
+            
+            return {"status": "success", "results": search_results}
+            
+    except Exception as e:
+        # Jika terjadi error Neo4j (misal: koneksi terputus)
+        return {"status": "error", "message": str(e)}
+
+@app.get("/entity/{entity_type}/{entity_id}")
+def get_entity_details(entity_type: str, entity_id: int):
+    """
+    Endpoint untuk mendapatkan detail lengkap dari Anime, Character, atau Studio.
+    """
+    
+    if entity_type not in ['Anime', 'Character', 'Studio']:
+        return {"status": "error", "message": "Invalid entity type"}
+    
+    # Query Cypher untuk mendapatkan semua properti dari node
+    cypher_query = f"""
+    MATCH (e:{entity_type})
+    WHERE ID(e) = $id
+    RETURN properties(e) AS entity
+    """
+    
+    try:
+        with driver.session() as session:
+            result = session.run(cypher_query, id=entity_id)
+            record = result.single()
+            
+            if not record:
+                return {"status": "error", "message": "Entity not found"}
+            
+            entity_data = record["entity"]
+            
+            # TODO: Fetch related entities (genres, studios, characters, etc.)
+            # For now, returning empty related array
+            entity_data["related"] = []
+            
+            return {"status": "success", "entity": entity_data}
+            
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
