@@ -13,6 +13,12 @@ const ChatbotPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const clearChat = () => {
+    setMessages([
+      { role: 'assistant', content: 'Hi! I\'m your Anime Knowledge Assistant. Ask me anything about anime, characters, or studios!' }
+    ]);
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -25,16 +31,24 @@ const ChatbotPage = () => {
     setInput('');
     
     // Add user message to chat
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const newUserMessage = { role: 'user', content: userMessage };
+    setMessages(prev => [...prev, newUserMessage]);
     setLoading(true);
 
     try {
+      // Send only the message history (excluding initial greeting and current message)
+      // Filter out the initial greeting for the API call
+      const conversationHistory = messages.slice(1); // Remove initial greeting
+      
       const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query: userMessage })
+        body: JSON.stringify({ 
+          query: userMessage,
+          history: conversationHistory  // Include conversation history
+        })
       });
 
       const data = await response.json();
@@ -61,9 +75,18 @@ const ChatbotPage = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] bg-base-200 rounded-box shadow-md">
       {/* Chat Header */}
-      <div className="bg-primary text-primary-content p-4 rounded-t-box">
-        <h1 className="text-2xl font-bold">Anime Chatbot</h1>
-        <p className="text-sm opacity-80">Powered by RAG & Knowledge Graph</p>
+      <div className="bg-primary text-primary-content p-4 rounded-t-box flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Anime Chatbot</h1>
+          <p className="text-sm opacity-80">Powered by RAG & Knowledge Graph</p>
+        </div>
+        <button 
+          onClick={clearChat} 
+          className="btn btn-sm btn-ghost"
+          title="Clear conversation"
+        >
+          🗑️ Clear
+        </button>
       </div>
 
       {/* Messages Container */}

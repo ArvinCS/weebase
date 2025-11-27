@@ -34,11 +34,15 @@ NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 driver = None
-embedding_model = None
 
 # Request model for chat endpoint
+class Message(BaseModel):
+    role: str  # 'user' or 'assistant'
+    content: str
+
 class ChatRequest(BaseModel):
     query: str
+    history: list[Message] = []  # Conversation history
 
 # Initialize Neo4j connection
 try:
@@ -47,15 +51,6 @@ try:
     logging.info("Koneksi Neo4j berhasil!")
 except Exception as e:
     logging.error(f"Gagal terhubung ke Neo4j: {e}")
-
-# Initialize embedding model
-try:
-    from sentence_transformers import SentenceTransformer
-    embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-    logging.info("Embedding model berhasil dimuat!")
-except Exception as e:
-    logging.error(f"Gagal memuat embedding model: {e}")
-    logging.warning("Fitur chatbot tidak akan tersedia tanpa embedding model")
 
 @app.get("/")
 def read_root():
@@ -212,6 +207,7 @@ def get_entity_details(entity_type: str, entity_id: int):
 def chat_with_rag(request: ChatRequest):
     """
     Endpoint untuk chatbot menggunakan RAG (Retrieval-Augmented Generation).
+    Supports conversation history for context-aware responses.
     """
     
     if driver is None:
@@ -221,8 +217,16 @@ def chat_with_rag(request: ChatRequest):
         return {"status": "error", "message": "Embedding model not loaded. Please install sentence-transformers: pip install sentence-transformers"}
     
     try:
-        # Generate response using RAG service
-        response = generate_rag_response(request.query, driver, embedding_model)
+        # Convert Pydantic models to dicts for the RAG service
+        history_dicts = [msg.dict() for msg in request.history]
+        
+        # Generate response using RAG service with conversation history
+        response = generate_rag_response(
+            request.query, 
+            driver, 
+            embedding_model,
+            conversation_history=history_dicts
+        )
         return {"status": "success", "response": response}
     except Exception as e:
         logging.error(f"Chat error: {e}")
