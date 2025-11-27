@@ -37,8 +37,9 @@ def extract_image_url(mal_url: str) -> str | None:
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # Mencari tag <img> dengan class yang spesifik
-        # Berdasarkan snippet HTML: img.portrait-225x350
-        img_tag = soup.find('img', class_='portrait-225x350')
+        # MENGGUNAKAN FUNGSI LAMBDA UNTUK PENCARIAN SUBSTRING
+        # Kita mencari tag img yang memiliki atribut 'class' dan nilai class tersebut mengandung kata 'portrait'
+        img_tag = soup.find('img', class_=lambda c: c and 'portrait-' in c)
         
         if img_tag:
             # Ambil dari 'data-src' atau fallback ke 'src'
