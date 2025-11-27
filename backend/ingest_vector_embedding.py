@@ -15,9 +15,8 @@ NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
-# Model Vector Embedding - UPGRADED to all-MiniLM-L12-v2 for better accuracy with same dimensions
-MODEL_NAME = 'all-MiniLM-L12-v2' 
-BATCH_SIZE = 1000 # JUMLAH BARU: Tingkatkan batch size untuk 160.000 nodes
+MODEL_NAME = 'Qwen/Qwen3-Embedding-0.6B' 
+BATCH_SIZE = 500
 
 # --- INICIALISASI ---
 try:
@@ -28,7 +27,7 @@ try:
 
     # 2. Muat Model Embedding
     logging.info(f"Memuat model Sentence Transformer: {MODEL_NAME}")
-    model = SentenceTransformer(MODEL_NAME)
+    model = SentenceTransformer(MODEL_NAME, trust_remote_code=True)
     VECTOR_DIMENSION = model.get_sentence_embedding_dimension()
     logging.info(f"Dimensi vektor model: {VECTOR_DIMENSION}")
 

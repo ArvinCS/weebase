@@ -12,9 +12,9 @@ from rag_service import generate_rag_response
 load_dotenv()
 
 # Load embedding model for semantic search
-MODEL_NAME = 'all-MiniLM-L12-v2'
+MODEL_NAME = 'Qwen/Qwen3-Embedding-0.6B'
 logging.info(f"Loading Sentence Transformer model: {MODEL_NAME}")
-embedding_model = SentenceTransformer(MODEL_NAME)
+embedding_model = SentenceTransformer(MODEL_NAME, trust_remote_code=True)
 logging.info("Model loaded successfully")
 
 app = FastAPI()
