@@ -1,28 +1,46 @@
 // src/pages/SearchPage.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-// import { API_BASE_URL } from '../config'; // Diperlukan untuk logika fetch
+import { API_BASE_URL } from '../config';
 
 const SearchPage = () => {
   const [keyword, setKeyword] = useState('');
   const [results, setResults] = useState([]); // Asumsi: [{entityType, titleOrName, uniqueId, score}]
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!keyword.trim()) return;
 
     setLoading(true);
-    // --- LOGIKA FETCH API DISINI ---
-    // Gunakan endpoint /api/search?keyword=...
-    // Menggunakan timeout simulasi agar komponen terlihat
-    await new Promise(resolve => setTimeout(resolve, 500)); 
-    setResults([
-        { entityType: 'Anime', titleOrName: 'Cowboy Bebop', uniqueId: 1, score: 0.95 },
-        { entityType: 'Character', titleOrName: 'Spike Spiegel', uniqueId: 10, score: 0.88 }
-    ]);
-    // --- AKHIR LOGIKA SIMULASI ---
-    setLoading(false);
+    setError(null);
+    
+    try {
+      // Fetch data dari backend
+      const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(keyword)}`);
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        // Transform backend response to match frontend structure
+        const transformedResults = data.results.map(item => ({
+          entityType: item.type[0], // type is an array, get first label
+          titleOrName: item.title,
+          uniqueId: item.id,
+          score: 1.0 // Backend doesn't return score yet, using default
+        }));
+        setResults(transformedResults);
+      } else {
+        setError(data.message || 'Search failed');
+        setResults([]);
+      }
+    } catch (err) {
+      setError('Failed to connect to server');
+      setResults([]);
+      console.error('Search error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,6 +63,20 @@ const SearchPage = () => {
           </button>
         </div>
       </form>
+
+      {/* Error Message */}
+      {error && (
+        <div className="alert alert-error mb-4">
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && results.length === 0 && !error && keyword && (
+        <div className="text-neutral-content">
+          No results found for "{keyword}"
+        </div>
+      )}
 
       {/* Hasil Pencarian */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
