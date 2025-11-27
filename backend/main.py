@@ -1,7 +1,8 @@
-import os  # <-- BARU
-from dotenv import load_dotenv  # <-- BARU
-from fastapi import FastAPI, Query
+import os
+from dotenv import load_dotenv
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from neo4j import GraphDatabase
 import logging
 
@@ -115,6 +116,25 @@ def get_entity_details(entity_type: str, entity_id: int):
             entity_data["related"] = []
             
             return {"status": "success", "entity": entity_data}
+            
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    
+@app.get("/console")
+def query_console(query:str):
+    """
+    Endpoint untuk menjalankan query Cypher langsung dari konsol.
+    """
+    query = query.strip()
+    if not query.lower().startswith("match"):
+        return {"status": "error", "message": "Only MATCH queries are allowed for security reasons."}
+    
+    try:
+        with driver.session() as session:
+            result = session.run(query)
+            columns = result.keys()
+            records = result.values()
+            return {"status": "success", "results": {"columns": columns, "records": records}}
             
     except Exception as e:
         return {"status": "error", "message": str(e)}
