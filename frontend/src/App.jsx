@@ -8,9 +8,9 @@ import './App.css';
 
 function App() {
   return (
-    <>
+    <div className="min-h-screen anime-bg">
       <Header />
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto">
         <Routes>
           <Route path="/" element={<SearchPage />} />
           <Route path="/console" element={<ConsolePage />} />
@@ -18,7 +18,7 @@ function App() {
           <Route path="/info/:entityType/:id" element={<InfoPage />} /> 
         </Routes>
       </div>
-    </>
+    </div>
   );
 }
 export default App;

@@ -3,16 +3,23 @@ from dotenv import load_dotenv  # <-- BARU
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from neo4j import GraphDatabase
+from sentence_transformers import SentenceTransformer
 import logging
 
 load_dotenv()
+
+# Load embedding model for semantic search
+MODEL_NAME = 'all-MiniLM-L12-v2'
+logging.info(f"Loading Sentence Transformer model: {MODEL_NAME}")
+embedding_model = SentenceTransformer(MODEL_NAME)
+logging.info("Model loaded successfully")
 
 app = FastAPI()
 
 # --- KONFIGURASI CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Dalam production, ganti dengan domain spesifik
+    allow_origins=["*"], # Ubah sesuai kebutuhan keamanan
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -82,6 +89,69 @@ def search_entities(q: str = Query(..., min_length=1)):
             
     except Exception as e:
         # Jika terjadi error Neo4j (misal: koneksi terputus)
+        return {"status": "error", "message": str(e)}
+
+@app.get("/search/semantic")
+def semantic_search(q: str = Query(..., min_length=1), limit: int = Query(default=25, le=100)):
+    """
+    Endpoint untuk pencarian semantik menggunakan vector similarity.
+    Mencari Anime dan Character berdasarkan kemiripan makna.
+    """
+    
+    try:
+        # Generate embedding untuk query
+        query_embedding = embedding_model.encode(q).tolist()
+        
+        # Query gabungan untuk Anime dan Character menggunakan UNION dengan subquery
+        combined_query = """
+        CALL {
+            CALL db.index.vector.queryNodes('anime_description_index', $limit, $embedding)
+            YIELD node, score
+            RETURN ID(node) AS nodeId,
+                   node.malAnimeId AS malId, 
+                   node.title AS title, 
+                   'Anime' AS type, 
+                   node.imageUrl AS image, 
+                   score,
+                   node.description AS description
+            
+            UNION
+            
+            CALL db.index.vector.queryNodes('character_description_index', $limit, $embedding)
+            YIELD node, score
+            RETURN ID(node) AS nodeId,
+                   node.malCharacterId AS malId, 
+                   node.name AS title, 
+                   'Character' AS type, 
+                   node.imageUrl AS image,
+                   score,
+                   node.description AS description
+        }
+        RETURN nodeId, malId, title, type, image, score, description
+        ORDER BY score DESC
+        LIMIT $limit
+        """
+        
+        results = []
+        
+        with driver.session() as session:
+            # Execute combined query
+            combined_results = session.run(combined_query, embedding=query_embedding, limit=limit)
+            for record in combined_results:
+                results.append({
+                    "title": record["title"],
+                    "type": [record["type"]],
+                    "id": record["nodeId"],
+                    "score": record["score"],
+                    "malId": record["malId"],
+                    "image": record["image"],
+                    "description": record["description"][:200] + "..." if record["description"] and len(record["description"]) > 200 else record["description"]
+                })
+        
+        return {"status": "success", "results": results, "search_type": "semantic"}
+        
+    except Exception as e:
+        logging.error(f"Semantic search error: {e}")
         return {"status": "error", "message": str(e)}
 
 @app.get("/entity/{entity_type}/{entity_id}")
