@@ -32,8 +32,22 @@ const ConsolePage = () => {
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Cypher Query Console</h1>
-            
+            <div className="text-center mb-6">
+                <h1 className="text-3xl font-bold mb-2">Cypher Query Console</h1>
+                <p className="text-base-content/70">
+                    Use Cypher query language to get data tailored to your needs. Only support read-only queries. {' '}
+                    <br></br>
+                    <a 
+                        href="https://neo4j.com/docs/cypher-manual/current/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-accent-blue hover:underline text-sm"                        
+                    >
+                        Learn more about Cypher
+                    </a>
+                </p>
+            </div>
+
             {/* Editor Area - Dark Theme (Manual Styling) */}
             <div className="bg-neutral-800 p-4 rounded-box shadow-2xl mb-4">
                 <textarea
@@ -48,7 +62,6 @@ const ConsolePage = () => {
             <button onClick={executeQuery} disabled={loading} className="btn btn-secondary shadow-lg">
                 {loading ? <span className="loading loading-spinner"></span> : 'Execute Query'}
             </button>
-            <p className="text-xs text-neutral mt-1">Gunakan Accent Orange (secondary) untuk aksi penting.</p>
 
             {/* Hasil Output */}
             <div className="mt-6">
