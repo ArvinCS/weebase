@@ -4,16 +4,25 @@ from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from neo4j import GraphDatabase
+from sentence_transformers import SentenceTransformer
 import logging
 
+from rag_service import generate_rag_response
+
 load_dotenv()
+
+# Load embedding model for semantic search
+MODEL_NAME = 'Qwen/Qwen3-Embedding-0.6B'
+logging.info(f"Loading Sentence Transformer model: {MODEL_NAME}")
+embedding_model = SentenceTransformer(MODEL_NAME, trust_remote_code=True)
+logging.info("Model loaded successfully")
 
 app = FastAPI()
 
 # --- KONFIGURASI CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Dalam production, ganti dengan domain spesifik
+    allow_origins=["*"], # Ubah sesuai kebutuhan keamanan
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +34,17 @@ NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 driver = None
+
+# Request model for chat endpoint
+class Message(BaseModel):
+    role: str  # 'user' or 'assistant'
+    content: str
+
+class ChatRequest(BaseModel):
+    query: str
+    history: list[Message] = []  # Conversation history
+
+# Initialize Neo4j connection
 try:
     driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
     driver.verify_connectivity()
@@ -85,6 +105,69 @@ def search_entities(q: str = Query(..., min_length=1)):
         # Jika terjadi error Neo4j (misal: koneksi terputus)
         return {"status": "error", "message": str(e)}
 
+@app.get("/search/semantic")
+def semantic_search(q: str = Query(..., min_length=1), limit: int = Query(default=25, le=100)):
+    """
+    Endpoint untuk pencarian semantik menggunakan vector similarity.
+    Mencari Anime dan Character berdasarkan kemiripan makna.
+    """
+    
+    try:
+        # Generate embedding untuk query
+        query_embedding = embedding_model.encode(q).tolist()
+        
+        # Query gabungan untuk Anime dan Character menggunakan UNION dengan subquery
+        combined_query = """
+        CALL {
+            CALL db.index.vector.queryNodes('anime_description_index', $limit, $embedding)
+            YIELD node, score
+            RETURN ID(node) AS nodeId,
+                   node.malAnimeId AS malId, 
+                   node.title AS title, 
+                   'Anime' AS type, 
+                   node.imageUrl AS image, 
+                   score,
+                   node.description AS description
+            
+            UNION
+            
+            CALL db.index.vector.queryNodes('character_description_index', $limit, $embedding)
+            YIELD node, score
+            RETURN ID(node) AS nodeId,
+                   node.malCharacterId AS malId, 
+                   node.name AS title, 
+                   'Character' AS type, 
+                   node.imageUrl AS image,
+                   score,
+                   node.description AS description
+        }
+        RETURN nodeId, malId, title, type, image, score, description
+        ORDER BY score DESC
+        LIMIT $limit
+        """
+        
+        results = []
+        
+        with driver.session() as session:
+            # Execute combined query
+            combined_results = session.run(combined_query, embedding=query_embedding, limit=limit)
+            for record in combined_results:
+                results.append({
+                    "title": record["title"],
+                    "type": [record["type"]],
+                    "id": record["nodeId"],
+                    "score": record["score"],
+                    "malId": record["malId"],
+                    "image": record["image"],
+                    "description": record["description"][:200] + "..." if record["description"] and len(record["description"]) > 200 else record["description"]
+                })
+        
+        return {"status": "success", "results": results, "search_type": "semantic"}
+        
+    except Exception as e:
+        logging.error(f"Semantic search error: {e}")
+        return {"status": "error", "message": str(e)}
+
 @app.get("/entity/{entity_type}/{entity_id}")
 def get_entity_details(entity_type: str, entity_id: int):
     """
@@ -138,3 +221,32 @@ def query_console(query:str):
             
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@app.post("/chat")
+def chat_with_rag(request: ChatRequest):
+    """
+    Endpoint untuk chatbot menggunakan RAG (Retrieval-Augmented Generation).
+    Supports conversation history for context-aware responses.
+    """
+    
+    if driver is None:
+        return {"status": "error", "message": "Database connection not available"}
+    
+    if embedding_model is None:
+        return {"status": "error", "message": "Embedding model not loaded. Please install sentence-transformers: pip install sentence-transformers"}
+    
+    try:
+        # Convert Pydantic models to dicts for the RAG service
+        history_dicts = [msg.dict() for msg in request.history]
+        
+        # Generate response using RAG service with conversation history
+        response = generate_rag_response(
+            request.query, 
+            driver, 
+            embedding_model,
+            conversation_history=history_dicts
+        )
+        return {"status": "success", "response": response}
+    except Exception as e:
+        logging.error(f"Chat error: {e}")
+        return {"status": "error", "message": f"Failed to generate response: {str(e)}"}
