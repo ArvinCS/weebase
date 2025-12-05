@@ -116,7 +116,7 @@ def semantic_search(q: str = Query(..., min_length=1), limit: int = Query(defaul
         # Query gabungan untuk Anime dan Character menggunakan UNION dengan subquery
         combined_query = """
         CALL {
-            CALL db.index.vector.queryNodes('anime_description_index', $limit, $embedding)
+            CALL db.index.vector.queryNodes('animeEmbedding', $limit, $embedding)
             YIELD node, score
             RETURN ID(node) AS nodeId,
                    node.malAnimeId AS malId, 
@@ -128,7 +128,7 @@ def semantic_search(q: str = Query(..., min_length=1), limit: int = Query(defaul
             
             UNION
             
-            CALL db.index.vector.queryNodes('character_description_index', $limit, $embedding)
+            CALL db.index.vector.queryNodes('characterEmbedding', $limit, $embedding)
             YIELD node, score
             RETURN ID(node) AS nodeId,
                    node.malCharacterId AS malId, 
