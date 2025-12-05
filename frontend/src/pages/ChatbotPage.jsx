@@ -8,6 +8,7 @@ const ChatbotPage = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
 
   const suggestedQuestions = [
@@ -18,7 +19,10 @@ const ChatbotPage = () => {
   ];
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Scroll only within the messages container, not the whole page
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   };
 
   const clearChat = () => {
@@ -122,7 +126,10 @@ const ChatbotPage = () => {
           </div>
 
           {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-purple-50/50 to-white">
+          <div 
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-purple-50/50 to-white"
+          >
             {messages.map((msg, index) => (
               <div
                 key={index}
