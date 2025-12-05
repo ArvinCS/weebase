@@ -12,7 +12,8 @@ LLM_API_KEY = os.getenv("LLM_API_KEY")
 LLM_PROVIDER = "groq"
 
 # Qwen3-Embedding requires instruction prefix for queries in retrieval tasks
-QUERY_INSTRUCTION = "Instruct: Given a user search query, retrieve relevant anime or character descriptions that match the query.\nQuery: "
+# For RAG chatbot: focus on retrieving passages that can ANSWER the user's question
+QUERY_INSTRUCTION = "Instruct: Given a question about anime or characters, retrieve relevant passages that contain the answer.\nQuery: "
 
 def get_context_from_neo4j(driver, query_vector, limit=5):
     """

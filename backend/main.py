@@ -19,6 +19,7 @@ logging.info("Model loaded successfully")
 
 # Qwen3-Embedding requires instruction prefix for queries in retrieval tasks
 # Documents are encoded without instruction (already done during ingestion)
+# For semantic search: focus on finding similar/matching content
 QUERY_INSTRUCTION = "Instruct: Given a user search query, retrieve relevant anime or character descriptions that match the query.\nQuery: "
 
 app = FastAPI()
