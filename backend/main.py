@@ -202,6 +202,23 @@ def get_entity_details(entity_type: str, entity_id: int):
     WHERE ID(e) = $id
     RETURN properties(e) AS entity
     """
+
+    cypher_query_relationships = {
+        'Anime': """
+            MATCH (e:Anime)
+            WHERE ID(e) = $id
+            OPTIONAL MATCH (e)<-[:APPEARS_IN]-(c:Character)
+            WITH e, collect(DISTINCT {name: c.fullName, type: 'Character', rel: 'Has Character', id: ID(c)}) AS characters
+            RETURN characters AS related
+        """,
+        'Character': """
+            MATCH (c:Character)
+            WHERE ID(c) = $id
+            OPTIONAL MATCH (c)-[:APPEARS_IN]->(a:Anime)
+            WITH c, collect(DISTINCT {name: a.title, type: 'Anime', rel: 'Appears In', id: ID(a)}) AS animes
+            RETURN animes AS related
+        """
+    }
     
     try:
         with driver.session() as session:
@@ -213,9 +230,16 @@ def get_entity_details(entity_type: str, entity_id: int):
             
             entity_data = record["entity"]
             
-            # TODO: Fetch related entities (genres, studios, characters, etc.)
-            # For now, returning empty related array
-            entity_data["related"] = []
+            # Fetch related entities based on entity type
+            if entity_type in cypher_query_relationships:
+                rel_result = session.run(cypher_query_relationships[entity_type], id=entity_id)
+                rel_record = rel_result.single()
+                if rel_record:
+                    entity_data["related"] = [r for r in rel_record["related"] if r['name'] is not None]
+                else:
+                    entity_data["related"] = []
+            else:
+                entity_data["related"] = []
             
             return {"status": "success", "entity": entity_data}
             
