@@ -109,12 +109,19 @@ const ChatbotPage = () => {
         {loading && (
           <div className="chat chat-start">
             <div className="chat-image avatar">
-              <div className="w-10 rounded-full bg-neutral text-neutral-content flex items-center justify-center">
+              <div className="w-10 rounded-full bg-neutral text-neutral-content flex items-center justify-center animate-pulse">
                 🤖
               </div>
             </div>
             <div className="chat-bubble chat-bubble-secondary">
-              <span className="loading loading-dots loading-sm"></span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm opacity-80">Thinking</span>
+                <span className="flex gap-1">
+                  <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </span>
+              </div>
             </div>
           </div>
         )}
