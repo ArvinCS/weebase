@@ -177,7 +177,8 @@ const SearchPage = () => {
           </div>
         )}
 
-      {/* Hasil Pencarian */}
+      {/* Hasil Pencarian - Hidden during loading */}
+      {!loading && (
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {results.map((item, index) => (
           <Link 
@@ -213,6 +214,7 @@ const SearchPage = () => {
           </Link>
         ))}
       </div>
+      )}
       </div>
     </div>
   );
