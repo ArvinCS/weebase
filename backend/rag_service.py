@@ -11,6 +11,9 @@ load_dotenv()
 LLM_API_KEY = os.getenv("LLM_API_KEY") 
 LLM_PROVIDER = "groq"
 
+# Qwen3-Embedding requires instruction prefix for queries in retrieval tasks
+QUERY_INSTRUCTION = "Instruct: Given a user search query, retrieve relevant anime or character descriptions that match the query.\nQuery: "
+
 def get_context_from_neo4j(driver, query_vector, limit=5):
     """
     Mengambil teks relevan dari Neo4j menggunakan Vector Search.
@@ -137,9 +140,10 @@ def generate_rag_response(user_query, driver, embedding_model, conversation_hist
         enhanced_query = f"{user_query} {' '.join(recent_entities)}"
         logging.info(f"Enhanced query with context: {enhanced_query}")
     
-    # 2. Embed Pertanyaan User
+    # 2. Embed Pertanyaan User (with instruction prefix for Qwen3-Embedding)
     try:
-        query_vector = embedding_model.encode(enhanced_query).tolist()
+        query_with_instruction = QUERY_INSTRUCTION + enhanced_query
+        query_vector = embedding_model.encode(query_with_instruction).tolist()
     except Exception as e:
         return f"Gagal memproses pertanyaan: {e}"
 

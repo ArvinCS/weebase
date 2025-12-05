@@ -17,6 +17,10 @@ logging.info(f"Loading Sentence Transformer model: {MODEL_NAME}")
 embedding_model = SentenceTransformer(MODEL_NAME, trust_remote_code=True)
 logging.info("Model loaded successfully")
 
+# Qwen3-Embedding requires instruction prefix for queries in retrieval tasks
+# Documents are encoded without instruction (already done during ingestion)
+QUERY_INSTRUCTION = "Instruct: Given a user search query, retrieve relevant anime or character descriptions that match the query.\nQuery: "
+
 app = FastAPI()
 
 # --- KONFIGURASI CORS ---
@@ -110,8 +114,9 @@ def semantic_search(q: str = Query(..., min_length=1), limit: int = Query(defaul
     """
     
     try:
-        # Generate embedding untuk query
-        query_embedding = embedding_model.encode(q).tolist()
+        # Generate embedding untuk query (with instruction prefix for Qwen3-Embedding)
+        query_with_instruction = QUERY_INSTRUCTION + q
+        query_embedding = embedding_model.encode(query_with_instruction).tolist()
         
         # Query gabungan untuk Anime dan Character menggunakan UNION dengan subquery
         combined_query = """
