@@ -23,6 +23,7 @@ const InfoPage = () => {
                 const data = await response.json();
                 
                 if (data.status === 'success') {
+                    console.log('Query response data:', data);
                     setEntity(data.entity);
                 } else {
                     setError(data.message || 'Failed to load data');
@@ -168,19 +169,19 @@ const InfoPage = () => {
 
                 {/* Related Entities Section */}
                 {entity.related && entity.related.length > 0 && (
-                    <div className="card bg-base-100 shadow-xl p-6">
-                        <h2 className="text-2xl font-bold mb-4 text-base-content">Related Entities</h2>
+                    <div className="card bg-white shadow-2xl p-6 border-t-4 border-purple-500">
+                        <h2 className="text-2xl font-bold mb-4 text-gray-900">Related Entities</h2>
                         <div className="flex overflow-x-auto gap-4 pb-4">
                             {entity.related.map((rel, index) => (
                                 <Link 
                                     key={index} 
                                     to={`/info/${rel.type}/${rel.id || index}`} 
-                                    className="card w-64 bg-accent shadow-md hover:shadow-xl transition duration-150 flex-shrink-0"
+                                    className="card w-64 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg hover:shadow-2xl transition-all duration-300 flex-shrink-0 border-2 border-purple-200 hover:border-purple-400"
                                 >
                                     <div className="card-body p-4">
-                                        <p className="font-semibold">{rel.name}</p>
-                                        <div className="badge badge-outline badge-sm">{rel.rel}</div>
-                                        <div className="badge badge-ghost badge-sm">{rel.type}</div>
+                                        <p className="font-bold text-gray-900">{rel.name}</p>
+                                        <div className="badge bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 badge-sm font-semibold">{rel.rel}</div>
+                                        <div className="badge badge-outline border-2 border-purple-400 text-purple-600 badge-sm font-semibold">{rel.type}</div>
                                     </div>
                                 </Link>
                             ))}
@@ -302,12 +303,12 @@ const InfoPage = () => {
                                             <Link 
                                                 key={index} 
                                                 to={`/info/${rel.type}/${rel.id || index}`} 
-                                                className="card w-64 bg-accent shadow-md hover:shadow-xl transition duration-150 flex-shrink-0"
+                                                className="card w-64 bg-gradient-to-br from-pink-50 to-purple-50 shadow-lg hover:shadow-2xl transition-all duration-300 flex-shrink-0 border-2 border-pink-200 hover:border-pink-400"
                                             >
                                                 <div className="card-body p-4">
-                                                    <p className="font-semibold text-gray-900">{rel.name}</p>
-                                                    <div className="badge badge-outline badge-sm">{rel.rel}</div>
-                                                    <div className="badge badge-ghost badge-sm">{rel.type}</div>
+                                                    <p className="font-bold text-gray-900">{rel.name}</p>
+                                                    <div className="badge bg-gradient-to-r from-pink-500 to-purple-500 text-white border-0 badge-sm font-semibold">{rel.rel}</div>
+                                                    <div className="badge badge-outline border-2 border-pink-400 text-pink-600 badge-sm font-semibold">{rel.type}</div>
                                                 </div>
                                             </Link>
                                         ))}
