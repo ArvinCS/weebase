@@ -17,13 +17,13 @@ def get_context_from_neo4j(driver, query_vector, limit=5):
     """
     cypher_query = """
         CALL {
-            CALL db.index.vector.queryNodes('anime_description_index', $limit, $embedding)
+            CALL db.index.vector.queryNodes('animeEmbedding', $limit, $embedding)
             YIELD node, score
             RETURN 'Anime: ' + node.title + '. Description: ' + node.description AS text, score
             
             UNION
             
-            CALL db.index.vector.queryNodes('character_description_index', $limit, $embedding)
+            CALL db.index.vector.queryNodes('characterEmbedding', $limit, $embedding)
             YIELD node, score
             RETURN 'Character: ' + node.name + '. Description: ' + node.description AS text, score
         }
