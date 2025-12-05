@@ -208,8 +208,13 @@ def get_entity_details(entity_type: str, entity_id: int):
             MATCH (e:Anime)
             WHERE ID(e) = $id
             OPTIONAL MATCH (e)<-[:APPEARS_IN]-(c:Character)
-            WITH e, collect(DISTINCT {name: c.fullName, type: 'Character', rel: 'Has Character', id: ID(c)}) AS characters
-            RETURN characters AS related
+            OPTIONAL MATCH (e)-[:HAS_GENRE]->(g:Genre)
+            OPTIONAL MATCH (e)-[:PRODUCED_BY]->(s:Studio)
+            WITH e, 
+                 collect(DISTINCT {name: c.fullName, type: 'Character', rel: 'Has Character', id: ID(c)}) AS characters,
+                 collect(DISTINCT g.name) AS genres,
+                 collect(DISTINCT s.name) AS studios
+            RETURN characters AS related, genres, studios
         """,
         'Character': """
             MATCH (c:Character)
@@ -236,8 +241,15 @@ def get_entity_details(entity_type: str, entity_id: int):
                 rel_record = rel_result.single()
                 if rel_record:
                     entity_data["related"] = [r for r in rel_record["related"] if r['name'] is not None]
+                    # Add genres and studios for Anime
+                    if entity_type == 'Anime':
+                        entity_data["genres"] = [g for g in rel_record.get("genres", []) if g is not None]
+                        entity_data["studios"] = [s for s in rel_record.get("studios", []) if s is not None and s.lower() != "add some"]
                 else:
                     entity_data["related"] = []
+                    if entity_type == 'Anime':
+                        entity_data["genres"] = []
+                        entity_data["studios"] = []
             else:
                 entity_data["related"] = []
             

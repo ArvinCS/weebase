@@ -156,6 +156,34 @@ const InfoPage = () => {
                                 </div>
                             </div>
 
+                            {/* Genres */}
+                            {entity.genres && entity.genres.length > 0 && (
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-500 uppercase mb-2">Genres</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {entity.genres.map((genre, idx) => (
+                                            <span key={idx} className="badge badge-md bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0 font-semibold">
+                                                {genre}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Studios */}
+                            {entity.studios && entity.studios.length > 0 && (
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-500 uppercase mb-2">Studios</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {entity.studios.map((studio, idx) => (
+                                            <span key={idx} className="badge badge-md bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-0 font-semibold">
+                                                {studio}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Synopsis */}
                             <div className="pt-3">
                                 <h2 className="text-2xl font-bold mb-2 text-gray-900">Synopsis</h2>
@@ -170,7 +198,7 @@ const InfoPage = () => {
                 {/* Related Entities Section */}
                 {entity.related && entity.related.length > 0 && (
                     <div className="card bg-white shadow-2xl p-6 border-t-4 border-purple-500">
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900">Related Entities</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-gray-900">Characters</h2>
                         <div className="flex overflow-x-auto gap-4 pb-4">
                             {entity.related.map((rel, index) => (
                                 <Link 
@@ -180,7 +208,7 @@ const InfoPage = () => {
                                 >
                                     <div className="card-body p-4">
                                         <p className="font-bold text-gray-900">{rel.name}</p>
-                                        <div className="badge bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 badge-sm font-semibold">{rel.rel}</div>
+                                        {/* <div className="badge bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 badge-sm font-semibold">{rel.rel}</div> */}
                                         <div className="badge badge-outline border-2 border-purple-400 text-purple-600 badge-sm font-semibold">{rel.type}</div>
                                     </div>
                                 </Link>
@@ -307,7 +335,7 @@ const InfoPage = () => {
                                             >
                                                 <div className="card-body p-4">
                                                     <p className="font-bold text-gray-900">{rel.name}</p>
-                                                    <div className="badge bg-gradient-to-r from-pink-500 to-purple-500 text-white border-0 badge-sm font-semibold">{rel.rel}</div>
+                                                    {/* <div className="badge bg-gradient-to-r from-pink-500 to-purple-500 text-white border-0 badge-sm font-semibold">{rel.rel}</div> */}
                                                     <div className="badge badge-outline border-2 border-pink-400 text-pink-600 badge-sm font-semibold">{rel.type}</div>
                                                 </div>
                                             </Link>
