@@ -2,3 +2,7 @@ venv/
 .env
 *.csv
 *.zip
+backend/.venv
+backend/.env
+backend/__pycache__
+.vscode

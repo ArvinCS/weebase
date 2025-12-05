@@ -1,5 +1,5 @@
-import os  # <-- BARU
-from dotenv import load_dotenv  # <-- BARU
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -76,18 +76,15 @@ def search_entities(q: str = Query(..., min_length=1)):
     # Query Cypher yang akan dieksekusi
     # Kita menggunakan parameter $keyword agar aman dari SQL/Cypher injection
     cypher_query = """
-    MATCH (e) 
-    WHERE (e:Anime AND toLower(e.title) CONTAINS toLower($keyword))
-        OR (e:Character AND toLower(e.name) CONTAINS toLower($keyword)) 
-        OR (e:Studio AND toLower(e.name) CONTAINS toLower($keyword)) 
-    RETURN 
-        CASE 
-            WHEN e:Anime THEN e.title 
-            ELSE e.name 
-        END AS title,
-        labels(e) AS type, 
-        ID(e) AS id
-    LIMIT 25
+        CALL db.index.fulltext.queryNodes('search_index', $keyword) 
+        YIELD node AS result, score
+        RETURN    
+        CASE WHEN 'Anime' IN labels(result) THEN result.title ELSE result.fullName END AS title,
+        ID(result) AS id,
+        labels(result) AS type,
+        score 
+        ORDER BY score DESC
+        LIMIT 25
     """
     
     # Menghubungkan ke Neo4j dan menjalankan query
@@ -199,6 +196,25 @@ def get_entity_details(entity_type: str, entity_id: int):
             entity_data["related"] = []
             
             return {"status": "success", "entity": entity_data}
+            
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    
+@app.get("/console")
+def query_console(query:str):
+    """
+    Endpoint untuk menjalankan query Cypher langsung dari konsol.
+    """
+    query = query.strip()
+    if not query.lower().startswith("match"):
+        return {"status": "error", "message": "Only MATCH queries are allowed for security reasons."}
+    
+    try:
+        with driver.session() as session:
+            result = session.execute_read(query)
+            columns = result.keys()
+            records = result.values()
+            return {"status": "success", "results": {"columns": columns, "records": records}}
             
     except Exception as e:
         return {"status": "error", "message": str(e)}

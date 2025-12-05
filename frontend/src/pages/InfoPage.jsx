@@ -261,29 +261,29 @@ const InfoPage = () => {
                                 <div className="divider"></div>
                                 <div>
                                     <h2 className="text-2xl font-bold mb-4 text-gray-900">Character Details</h2>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 text-wrap ">
                                         {entity.age && (
                                             <div className="stat bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg p-4 shadow-lg border-2 border-purple-200">
                                                 <div className="stat-title text-xs font-bold text-purple-600">AGE</div>
-                                                <div className="stat-value text-3xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{entity.age}</div>
+                                                <div className="text-wrap stat-value text-3xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{entity.age}</div>
                                             </div>
                                         )}
                                         {entity.height && (
                                             <div className="stat bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg p-4 shadow-lg border-2 border-blue-200">
                                                 <div className="stat-title text-xs font-bold text-blue-600">HEIGHT</div>
-                                                <div className="stat-value text-3xl bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{entity.height}</div>
+                                                <div className="text-wrap stat-value text-3xl bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{entity.height}</div>
                                             </div>
                                         )}
                                         {entity.birthday && (
                                             <div className="stat bg-gradient-to-br from-pink-100 to-red-100 rounded-lg p-4 shadow-lg border-2 border-pink-200">
                                                 <div className="stat-title text-xs font-bold text-pink-600">BIRTHDAY</div>
-                                                <div className="stat-value text-3xl bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">{entity.birthday}</div>
+                                                <div className="text-wrap stat-value text-3xl bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">{entity.birthday}</div>
                                             </div>
                                         )}
                                         {entity.gender && (
                                             <div className="stat bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg p-4 shadow-lg border-2 border-indigo-200">
                                                 <div className="stat-title text-xs font-bold text-indigo-600">GENDER</div>
-                                                <div className="stat-value text-3xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{entity.gender}</div>
+                                                <div className="text-wrap stat-value text-3xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{entity.gender}</div>
                                             </div>
                                         )}
                                     </div>
