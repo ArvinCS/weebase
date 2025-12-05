@@ -47,7 +47,7 @@ const SearchPage = () => {
           entityType: item.type[0], // type is an array, get first label
           titleOrName: item.title,
           uniqueId: item.id,
-          score: item.score || 1.0 // Use semantic score if available
+          score: Math.min(item.score || 1, 1) // Use semantic score if available
         }));
         setResults(transformedResults);
       } else {
@@ -117,7 +117,7 @@ const SearchPage = () => {
               {useSemanticSearch ? (
                 <p>Using AI to understand meaning and context</p>
               ) : (
-                <p>Searching for exact keyword matches</p>
+                <p>Searching for keyword matches</p>
               )}
             </div>
           </div>

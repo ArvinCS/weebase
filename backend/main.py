@@ -76,18 +76,15 @@ def search_entities(q: str = Query(..., min_length=1)):
     # Query Cypher yang akan dieksekusi
     # Kita menggunakan parameter $keyword agar aman dari SQL/Cypher injection
     cypher_query = """
-    MATCH (e) 
-    WHERE (e:Anime AND toLower(e.title) CONTAINS toLower($keyword))
-        OR (e:Character AND toLower(e.name) CONTAINS toLower($keyword)) 
-        OR (e:Studio AND toLower(e.name) CONTAINS toLower($keyword)) 
-    RETURN 
-        CASE 
-            WHEN e:Anime THEN e.title 
-            ELSE e.name 
-        END AS title,
-        labels(e) AS type, 
-        ID(e) AS id
-    LIMIT 25
+        CALL db.index.fulltext.queryNodes('search_index', $keyword) 
+        YIELD node AS result, score
+        RETURN    
+        CASE WHEN 'Anime' IN labels(result) THEN result.title ELSE result.fullName END AS title,
+        ID(result) AS id,
+        labels(result) AS type,
+        score 
+        ORDER BY score DESC
+        LIMIT 25
     """
     
     # Menghubungkan ke Neo4j dan menjalankan query
@@ -214,7 +211,7 @@ def query_console(query:str):
     
     try:
         with driver.session() as session:
-            result = session.run(query)
+            result = session.execute_read(query)
             columns = result.keys()
             records = result.values()
             return {"status": "success", "results": {"columns": columns, "records": records}}
