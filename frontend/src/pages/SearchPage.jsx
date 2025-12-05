@@ -130,6 +130,44 @@ const SearchPage = () => {
           </div>
         )}
 
+        {/* Loading Animation */}
+        {loading && (
+          <div className="text-center py-16">
+            <div className="inline-flex flex-col items-center">
+              {/* Animated Search Icon */}
+              <div className="relative mb-6">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse flex items-center justify-center">
+                  <span className="text-4xl animate-bounce">🔍</span>
+                </div>
+                {/* Orbiting dots */}
+                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-3 h-3 bg-purple-400 rounded-full"></div>
+                </div>
+                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}>
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-2 w-2 h-2 bg-pink-400 rounded-full"></div>
+                </div>
+              </div>
+              
+              {/* Animated Text */}
+              <div className="space-y-2">
+                <p className="text-2xl font-bold gradient-text animate-pulse">
+                  {useSemanticSearch ? '🧠 AI is thinking...' : '🔤 Searching...'}
+                </p>
+                <p className="text-gray-500">
+                  {useSemanticSearch 
+                    ? 'Analyzing meaning and finding the best matches' 
+                    : 'Looking for keyword matches'}
+                </p>
+              </div>
+              
+              {/* Animated Progress Bar */}
+              <div className="w-64 h-2 bg-gray-200 rounded-full mt-6 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full animate-loading-bar"></div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Empty State */}
         {!loading && results.length === 0 && !error && hasSearched && (
           <div className="text-center py-12">
