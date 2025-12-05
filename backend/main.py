@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from neo4j import GraphDatabase
 from sentence_transformers import SentenceTransformer
 import logging
+import re
 
 from rag_service import generate_rag_response
 
@@ -48,6 +49,21 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     query: str
     history: list[Message] = []  # Conversation history
+
+# Fungsi untuk memeriksa apakah query hanya READ saja
+def is_readonly_query(query):
+    forbidden_keywords = [
+        r'\bCREATE\b', r'\bDELETE\b', r'\bDETACH\b', r'\bSET\b', 
+        r'\bMERGE\b', r'\bREMOVE\b', r'\bDROP\b', r'\bFOREACH\b',
+        r'\bLOAD CSV\b', r'\bCALL\b' 
+    ]
+    
+    pattern = re.compile('|'.join(forbidden_keywords), re.IGNORECASE)
+    
+    if pattern.search(query):
+        return False
+    
+    return True
 
 # Initialize Neo4j connection
 try:
@@ -212,18 +228,25 @@ def query_console(query:str):
     Endpoint untuk menjalankan query Cypher langsung dari konsol.
     """
     query = query.strip()
-    if not query.lower().startswith("match"):
-        return {"status": "error", "message": "Only MATCH queries are allowed for security reasons."}
+    if not is_readonly_query(query):  
+        raise HTTPException(
+            status_code=403,
+            detail="Write operations (CREATE, DELETE, SET, etc.) are not allowed in this console."
+        )
     
     try:
         with driver.session() as session:
-            result = session.execute_read(query)
+            result = session.run(query)
             columns = result.keys()
             records = result.values()
             return {"status": "success", "results": {"columns": columns, "records": records}}
             
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        logging.error(f"Console query error: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
 
 @app.post("/chat")
 def chat_with_rag(request: ChatRequest):

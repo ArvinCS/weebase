@@ -17,7 +17,10 @@ const ConsolePage = () => {
             const response = await fetch(`${API_BASE_URL}/console?query=${encodeURIComponent(query)}`);
             const data = await response.json();
 
-            if (data.status === 'success') {
+            if (!response.ok) {
+                // Handle HTTP error responses (403, 400, etc.)
+                setError(data.detail || data.message || `Error: ${response.status}`);
+            } else if (data.status === 'success') {
                 setResults(data.results);
             } else {
                 setError(data.message || 'Query failed');
