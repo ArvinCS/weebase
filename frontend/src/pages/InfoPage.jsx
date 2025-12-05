@@ -284,35 +284,122 @@ const InfoPage = () => {
                             </div>
                         </div>
 
-                        {/* Additional Info if available */}
-                        {(entity.age || entity.height || entity.birthday || entity.gender) && (
+                        {/* Character Details */}
+                        {(entity.age || entity.height || entity.birthday || entity.gender || entity.bloodType || 
+                          entity.weight || entity.episode || entity.likes || entity.occupation || entity.race || 
+                          entity.affiliation || entity.dislikes || entity.eyeColor || entity.birthdate || 
+                          entity.debut || entity.hairColor || entity.position || entity.class || entity.hobbies) && (
                             <>
                                 <div className="divider"></div>
                                 <div>
                                     <h2 className="text-2xl font-bold mb-4 text-gray-900">Character Details</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 text-wrap ">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {entity.age && (
                                             <div className="stat bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg p-4 shadow-lg border-2 border-purple-200">
                                                 <div className="stat-title text-xs font-bold text-purple-600">AGE</div>
-                                                <div className="text-wrap stat-value text-3xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{entity.age}</div>
-                                            </div>
-                                        )}
-                                        {entity.height && (
-                                            <div className="stat bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg p-4 shadow-lg border-2 border-blue-200">
-                                                <div className="stat-title text-xs font-bold text-blue-600">HEIGHT</div>
-                                                <div className="text-wrap stat-value text-3xl bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{entity.height}</div>
-                                            </div>
-                                        )}
-                                        {entity.birthday && (
-                                            <div className="stat bg-gradient-to-br from-pink-100 to-red-100 rounded-lg p-4 shadow-lg border-2 border-pink-200">
-                                                <div className="stat-title text-xs font-bold text-pink-600">BIRTHDAY</div>
-                                                <div className="text-wrap stat-value text-3xl bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">{entity.birthday}</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{entity.age}</div>
                                             </div>
                                         )}
                                         {entity.gender && (
                                             <div className="stat bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg p-4 shadow-lg border-2 border-indigo-200">
                                                 <div className="stat-title text-xs font-bold text-indigo-600">GENDER</div>
-                                                <div className="text-wrap stat-value text-3xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{entity.gender}</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{entity.gender}</div>
+                                            </div>
+                                        )}
+                                        {(entity.birthday || entity.birthdate) && (
+                                            <div className="stat bg-gradient-to-br from-pink-100 to-red-100 rounded-lg p-4 shadow-lg border-2 border-pink-200">
+                                                <div className="stat-title text-xs font-bold text-pink-600">BIRTHDAY</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">{entity.birthday || entity.birthdate}</div>
+                                            </div>
+                                        )}
+                                        {entity.height && (
+                                            <div className="stat bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg p-4 shadow-lg border-2 border-blue-200">
+                                                <div className="stat-title text-xs font-bold text-blue-600">HEIGHT</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{entity.height}</div>
+                                            </div>
+                                        )}
+                                        {entity.weight && (
+                                            <div className="stat bg-gradient-to-br from-teal-100 to-green-100 rounded-lg p-4 shadow-lg border-2 border-teal-200">
+                                                <div className="stat-title text-xs font-bold text-teal-600">WEIGHT</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-teal-600 to-green-600 bg-clip-text text-transparent">{entity.weight}</div>
+                                            </div>
+                                        )}
+                                        {entity.bloodType && (
+                                            <div className="stat bg-gradient-to-br from-red-100 to-orange-100 rounded-lg p-4 shadow-lg border-2 border-red-200">
+                                                <div className="stat-title text-xs font-bold text-red-600">BLOOD TYPE</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">{entity.bloodType}</div>
+                                            </div>
+                                        )}
+                                        {entity.race && (
+                                            <div className="stat bg-gradient-to-br from-amber-100 to-yellow-100 rounded-lg p-4 shadow-lg border-2 border-amber-200">
+                                                <div className="stat-title text-xs font-bold text-amber-600">RACE</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">{entity.race}</div>
+                                            </div>
+                                        )}
+                                        {entity.eyeColor && (
+                                            <div className="stat bg-gradient-to-br from-sky-100 to-blue-100 rounded-lg p-4 shadow-lg border-2 border-sky-200">
+                                                <div className="stat-title text-xs font-bold text-sky-600">EYE COLOR</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">{entity.eyeColor}</div>
+                                            </div>
+                                        )}
+                                        {entity.hairColor && (
+                                            <div className="stat bg-gradient-to-br from-fuchsia-100 to-pink-100 rounded-lg p-4 shadow-lg border-2 border-fuchsia-200">
+                                                <div className="stat-title text-xs font-bold text-fuchsia-600">HAIR COLOR</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-fuchsia-600 to-pink-600 bg-clip-text text-transparent">{entity.hairColor}</div>
+                                            </div>
+                                        )}
+                                        {entity.occupation && (
+                                            <div className="stat bg-gradient-to-br from-slate-100 to-gray-100 rounded-lg p-4 shadow-lg border-2 border-slate-200">
+                                                <div className="stat-title text-xs font-bold text-slate-600">OCCUPATION</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">{entity.occupation}</div>
+                                            </div>
+                                        )}
+                                        {entity.affiliation && (
+                                            <div className="stat bg-gradient-to-br from-violet-100 to-purple-100 rounded-lg p-4 shadow-lg border-2 border-violet-200">
+                                                <div className="stat-title text-xs font-bold text-violet-600">AFFILIATION</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">{entity.affiliation}</div>
+                                            </div>
+                                        )}
+                                        {entity.position && (
+                                            <div className="stat bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg p-4 shadow-lg border-2 border-emerald-200">
+                                                <div className="stat-title text-xs font-bold text-emerald-600">POSITION</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{entity.position}</div>
+                                            </div>
+                                        )}
+                                        {entity.class && (
+                                            <div className="stat bg-gradient-to-br from-orange-100 to-amber-100 rounded-lg p-4 shadow-lg border-2 border-orange-200">
+                                                <div className="stat-title text-xs font-bold text-orange-600">CLASS</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">{entity.class}</div>
+                                            </div>
+                                        )}
+                                        {entity.debut && (
+                                            <div className="stat bg-gradient-to-br from-rose-100 to-pink-100 rounded-lg p-4 shadow-lg border-2 border-rose-200">
+                                                <div className="stat-title text-xs font-bold text-rose-600">DEBUT</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">{entity.debut}</div>
+                                            </div>
+                                        )}
+                                        {entity.episode && (
+                                            <div className="stat bg-gradient-to-br from-cyan-100 to-sky-100 rounded-lg p-4 shadow-lg border-2 border-cyan-200">
+                                                <div className="stat-title text-xs font-bold text-cyan-600">EPISODE</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-cyan-600 to-sky-600 bg-clip-text text-transparent">{entity.episode}</div>
+                                            </div>
+                                        )}
+                                        {entity.likes && (
+                                            <div className="stat bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg p-4 shadow-lg border-2 border-green-200">
+                                                <div className="stat-title text-xs font-bold text-green-600">LIKES</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{entity.likes}</div>
+                                            </div>
+                                        )}
+                                        {entity.dislikes && (
+                                            <div className="stat bg-gradient-to-br from-red-100 to-rose-100 rounded-lg p-4 shadow-lg border-2 border-red-200">
+                                                <div className="stat-title text-xs font-bold text-red-600">DISLIKES</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">{entity.dislikes}</div>
+                                            </div>
+                                        )}
+                                        {entity.hobbies && (
+                                            <div className="stat bg-gradient-to-br from-lime-100 to-green-100 rounded-lg p-4 shadow-lg border-2 border-lime-200">
+                                                <div className="stat-title text-xs font-bold text-lime-600">HOBBIES</div>
+                                                <div className="text-wrap stat-value text-xl bg-gradient-to-r from-lime-600 to-green-600 bg-clip-text text-transparent">{entity.hobbies}</div>
                                             </div>
                                         )}
                                     </div>
