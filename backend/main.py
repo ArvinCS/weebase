@@ -284,6 +284,94 @@ def query_console(query:str):
             detail=str(e)
         )
 
+@app.get("/entity/{entity_type}/{entity_id}/similar")
+def get_similar_entities(entity_type: str, entity_id: int, limit: int = Query(default=6, le=20)):
+    """
+    Endpoint untuk mendapatkan entitas yang mirip berdasarkan vector similarity.
+    Menggunakan embedding dari entitas saat ini untuk mencari yang serupa.
+    """
+    
+    if entity_type not in ['Anime', 'Character']:
+        return {"status": "error", "message": "Invalid entity type. Only Anime and Character supported."}
+    
+    try:
+        # First, get the embedding of the current entity
+        if entity_type == 'Anime':
+            get_embedding_query = """
+                MATCH (e:Anime) WHERE ID(e) = $id
+                RETURN e.embedding AS embedding, e.title AS currentTitle
+            """
+            index_name = 'animeEmbedding'
+            title_field = 'title'
+            id_field = 'malAnimeId'
+        else:  # Character
+            get_embedding_query = """
+                MATCH (e:Character) WHERE ID(e) = $id
+                RETURN e.embedding AS embedding, e.name AS currentTitle
+            """
+            index_name = 'characterEmbedding'
+            title_field = 'name'
+            id_field = 'malCharacterId'
+        
+        with driver.session() as session:
+            # Get current entity's embedding
+            result = session.run(get_embedding_query, id=entity_id)
+            record = result.single()
+            
+            if not record or not record["embedding"]:
+                return {"status": "error", "message": "Entity not found or has no embedding"}
+            
+            entity_embedding = record["embedding"]
+            current_title = record["currentTitle"]
+            
+            # Find similar entities using vector search
+            # We request limit+1 because the entity itself might be in the results
+            similar_query = f"""
+                CALL db.index.vector.queryNodes('{index_name}', $search_limit, $embedding)
+                YIELD node, score
+                WHERE ID(node) <> $id
+                RETURN 
+                    ID(node) AS nodeId,
+                    node.{id_field} AS malId,
+                    node.{title_field} AS title,
+                    node.imageUrl AS image,
+                    node.description AS description,
+                    score
+                ORDER BY score DESC
+                LIMIT $limit
+            """
+            
+            similar_results = session.run(
+                similar_query, 
+                embedding=entity_embedding, 
+                id=entity_id,
+                limit=limit,
+                search_limit=limit + 5  # Get extra to account for filtering
+            )
+            
+            similar_entities = []
+            for rec in similar_results:
+                similar_entities.append({
+                    "id": rec["nodeId"],
+                    "malId": rec["malId"],
+                    "title": rec["title"],
+                    "image": rec["image"],
+                    "description": rec["description"][:150] + "..." if rec["description"] and len(rec["description"]) > 150 else rec["description"],
+                    "score": rec["score"],
+                    "type": entity_type
+                })
+            
+            return {
+                "status": "success", 
+                "similar": similar_entities,
+                "currentEntity": current_title,
+                "entityType": entity_type
+            }
+            
+    except Exception as e:
+        logging.error(f"Similar entities error: {e}")
+        return {"status": "error", "message": str(e)}
+
 @app.post("/chat")
 def chat_with_rag(request: ChatRequest):
     """

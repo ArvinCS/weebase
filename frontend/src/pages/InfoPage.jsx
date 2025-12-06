@@ -9,6 +9,8 @@ const InfoPage = () => {
     const [entity, setEntity] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [similarEntities, setSimilarEntities] = useState([]);
+    const [loadingSimilar, setLoadingSimilar] = useState(false);
     
     const searchState = location.state?.searchState;
 
@@ -16,6 +18,7 @@ const InfoPage = () => {
         const fetchEntityData = async () => {
             setLoading(true);
             setError(null);
+            setSimilarEntities([]);
             
             try {
                 // Fetch data dari backend
@@ -38,6 +41,29 @@ const InfoPage = () => {
 
         fetchEntityData();
     }, [entityType, id]);
+
+    // Fetch similar entities
+    useEffect(() => {
+        const fetchSimilarEntities = async () => {
+            if (!entity || (entityType !== 'Anime' && entityType !== 'Character')) return;
+            
+            setLoadingSimilar(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/entity/${entityType}/${id}/similar?limit=6`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    setSimilarEntities(data.similar);
+                }
+            } catch (err) {
+                console.error('Failed to fetch similar entities:', err);
+            } finally {
+                setLoadingSimilar(false);
+            }
+        };
+
+        fetchSimilarEntities();
+    }, [entity, entityType, id]);
 
     if (loading) return (
         <div className="flex justify-center items-center min-h-screen">
@@ -93,15 +119,40 @@ const InfoPage = () => {
                                     </div>
                                 </figure>
                             
-                                {/* Quick Stats */}
-                                <a 
-                                    href={entity.malUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="btn btn-block glow-button bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 font-bold"
-                                >
-                                    View on MyAnimeList
-                                </a>
+                                {/* External Links */}
+                                <div className="space-y-2">
+                                    <a 
+                                        href={entity.malUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="btn btn-block glow-button bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 font-bold text-sm"
+                                    >
+                                        <span>📊</span> MyAnimeList
+                                    </a>
+                                    
+                                    {entity.imdbUrl && (
+                                        <a 
+                                            href={entity.imdbUrl} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="btn btn-block bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black border-0 font-bold text-sm shadow-lg"
+                                        >
+                                            <span>🎬</span> IMDb
+                                        </a>
+                                    )}
+                                    
+                                    {entity.officialWebsite && (
+                                        <a 
+                                            href={entity.officialWebsite} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="btn btn-block bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0 font-bold text-sm shadow-lg"
+                                        >
+                                            <span>🌐</span> Official Website
+                                        </a>
+                                    )}
+                                </div>
+                                
                                 <div className="stats stats-vertical shadow-lg w-full bg-gradient-to-br from-purple-50 to-pink-50">
                                     <div className="stat py-3 bg-white/50">
                                         <div className="stat-title text-xs font-bold text-purple-600">🏆 RANKED</div>
@@ -216,6 +267,65 @@ const InfoPage = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Similar Anime Section */}
+                <div className="card bg-white shadow-2xl p-6 border-t-4 border-pink-500 mt-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">✨</span>
+                        <h2 className="text-2xl font-bold text-gray-900">Similar Anime</h2>
+                        {loadingSimilar && <span className="loading loading-spinner loading-sm text-pink-500"></span>}
+                    </div>
+                    
+                    {loadingSimilar ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                            {[...Array(6)].map((_, i) => (
+                                <div key={i} className="animate-pulse">
+                                    <div className="bg-gray-200 rounded-lg h-48 mb-2"></div>
+                                    <div className="bg-gray-200 rounded h-4 w-3/4"></div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : similarEntities.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                            {similarEntities.map((item, index) => (
+                                <Link 
+                                    key={index} 
+                                    to={`/info/${item.type}/${item.id}`}
+                                    className="group"
+                                >
+                                    <div className="anime-card card bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-pink-300">
+                                        <figure className="relative h-48 overflow-hidden">
+                                            {item.image ? (
+                                                <img 
+                                                    src={item.image} 
+                                                    alt={item.title}
+                                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-purple-200 to-pink-200 flex items-center justify-center">
+                                                    <span className="text-4xl">📺</span>
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="badge badge-sm bg-pink-500 text-white border-0">
+                                                    {(item.score * 100).toFixed(0)}% match
+                                                </div>
+                                            </div>
+                                        </figure>
+                                        <div className="card-body p-3">
+                                            <h3 className="font-bold text-sm text-gray-800 line-clamp-2 group-hover:text-pink-600 transition-colors">
+                                                {item.title}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-gray-500 text-center py-8">No similar anime found</p>
+                    )}
+                </div>
               </div>
             </div>
         );
@@ -344,6 +454,61 @@ const InfoPage = () => {
                                 </div>
                             </>
                         )}
+
+                        {/* Similar Characters Section */}
+                        <div className="divider"></div>
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <span className="text-2xl">👥</span>
+                                <h2 className="text-2xl font-bold text-gray-900">Similar Characters</h2>
+                                {loadingSimilar && <span className="loading loading-spinner loading-sm text-pink-500"></span>}
+                            </div>
+                            
+                            {loadingSimilar ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                    {[...Array(6)].map((_, i) => (
+                                        <div key={i} className="animate-pulse">
+                                            <div className="bg-gray-200 rounded-full h-24 w-24 mx-auto mb-2"></div>
+                                            <div className="bg-gray-200 rounded h-4 w-3/4 mx-auto"></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : similarEntities.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                    {similarEntities.map((item, index) => (
+                                        <Link 
+                                            key={index} 
+                                            to={`/info/${item.type}/${item.id}`}
+                                            className="group text-center"
+                                        >
+                                            <div className="anime-card p-4 rounded-xl bg-gradient-to-br from-pink-50 to-purple-50 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-pink-300">
+                                                <div className="relative w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden ring-4 ring-pink-200 group-hover:ring-pink-400 transition-all">
+                                                    {item.image ? (
+                                                        <img 
+                                                            src={item.image} 
+                                                            alt={item.title}
+                                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-gradient-to-br from-pink-200 to-purple-200 flex items-center justify-center">
+                                                            <span className="text-2xl">👤</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <h3 className="font-bold text-sm text-gray-800 line-clamp-2 group-hover:text-pink-600 transition-colors">
+                                                    {item.title}
+                                                </h3>
+                                                <div className="badge badge-sm bg-pink-100 text-pink-600 border-0 mt-2">
+                                                    {(item.score * 100).toFixed(0)}% match
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 text-center py-8">No similar characters found</p>
+                            )}
+                        </div>
                     </div>
                 </div>
               </div>
